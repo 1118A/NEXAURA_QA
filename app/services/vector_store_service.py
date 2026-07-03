@@ -1,5 +1,5 @@
 import logging
-import chromadb
+import chromadb  # chromadb-client package (HTTP-only, no local ML deps)
 from typing import List, Dict, Any
 
 from app.config import (

@@ -13,12 +13,16 @@ DATA_DIR = BASE_DIR / "data"
 REPOS_DIR = DATA_DIR / "repos"
 LOGS_DIR = BASE_DIR / "logs"
 
-# Ensure directories exist
-REPOS_DIR.mkdir(parents=True, exist_ok=True)
-LOGS_DIR.mkdir(parents=True, exist_ok=True)
+# Ensure directories exist (gracefully skip on read-only filesystems like Vercel)
+try:
+    REPOS_DIR.mkdir(parents=True, exist_ok=True)
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+except (OSError, PermissionError):
+    pass  # Serverless environment
 
 # API Keys & Configurations
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+JINA_API_KEY = os.getenv("JINA_API_KEY")  # Free at https://jina.ai — replaces sentence-transformers
 CHROMA_API_KEY = os.getenv("CHROMA_API_KEY")
 CHROMA_TENANT = os.getenv("CHROMA_TENANT")
 CHROMA_DATABASE = os.getenv("CHROMA_DATABASE")
@@ -28,7 +32,7 @@ CHROMA_COLLECTION_NAME = "codebase_qa"
 UPSERT_BATCH_SIZE = 64  # Increased for bulk performance
 
 # RAG Configurations
-EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+EMBEDDING_MODEL_NAME = "jina-embeddings-v2-base-en"  # API-based via Jina AI (768-dim)
 SUPPORTED_EXTENSIONS = [
     ".py",
     ".js",
@@ -48,6 +52,8 @@ CONFIG_ERRORS = []
 
 if not GROQ_API_KEY:
     CONFIG_ERRORS.append("GROQ_API_KEY is not set.")
+if not JINA_API_KEY:
+    CONFIG_ERRORS.append("JINA_API_KEY is not set. Get a free key at https://jina.ai")
 if not CHROMA_API_KEY:
     CONFIG_ERRORS.append("CHROMA_API_KEY is not set.")
 if not CHROMA_TENANT:
