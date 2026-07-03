@@ -1,0 +1,10 @@
+# Exclude local virtual environment, cached data, logs, and git history
+.venv/
+data/
+logs/
+.git/
+__pycache__/
+*.pyc
+*.pyo
+.env
+tests/
