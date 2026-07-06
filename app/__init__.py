@@ -2,11 +2,14 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask
+from flask_cors import CORS
 
 from app.config import LOGS_DIR, check_config, CONFIG_ERRORS
 
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
+    CORS(app) # Enable Cross-Origin Resource Sharing
+
     
     # 1. Setup Logging
     LOGS_DIR.mkdir(parents=True, exist_ok=True)

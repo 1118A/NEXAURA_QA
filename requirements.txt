@@ -10,5 +10,5 @@ tree-sitter-python>=0.25.0
 tree-sitter-javascript>=0.25.0
 tree-sitter-typescript>=0.23.2
 pydantic>=2.13.0
+flask-cors>=4.0.0
 serverless-wsgi>=3.0.2
-
