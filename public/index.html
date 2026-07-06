@@ -1,1 +1,302 @@
-<!-- This folder is the static publish target for Netlify. All traffic is rewritten to the Flask serverless function. -->
+<!DOCTYPE html>
+<html lang="en" data-time-theme="dark" data-time-weather="sunny">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexAura QA — Advanced Codebase Search Bot</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Lexend:wght@100;200;300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="images/logo.jpg" type="image/jpeg">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Set dynamic time and weather attributes before content loads
+        const localHour = new Date().getHours();
+        const defaultTheme = (localHour >= 6 && localHour < 18) ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-time-theme', defaultTheme);
+        
+        const currentMonth = new Date().getMonth() + 1;
+        let defaultWeather = 'cloudy';
+        if ([12, 1, 2].includes(currentMonth)) defaultWeather = 'winter';
+        else if ([3, 4, 5].includes(currentMonth)) defaultWeather = 'sunny';
+        else if ([6, 7, 8, 9].includes(currentMonth)) defaultWeather = 'rainy';
+        document.documentElement.setAttribute('data-time-weather', defaultWeather);
+    </script>
+</head>
+
+<body>
+    <!-- Theme Particle Animations -->
+    <canvas id="theme-particles"></canvas>
+
+    <!-- Background glows -->
+    <div class="glow-bg bg-purple"></div>
+    <div class="glow-bg bg-gold"></div>
+
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <img src="images/logo.jpg" alt="NexAura Logo" class="logo-img">
+                <span class="logo-text">NEXAURA<span class="accent-gold">QA</span></span>
+            </a>
+            <nav class="nav-links">
+                <a href="#features">How it Works</a>
+                <a href="#tech-stack">Tech Stack</a>
+                <!-- Backend API Configuration input field -->
+                <div class="backend-config-container" style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="server" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                    <input type="text" id="backend-url-input" placeholder="Backend API URL (e.g. Vercel)" 
+                           style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; color: var(--text-primary); font-size: 12px; outline: none; width: 180px;">
+                </div>
+                <div class="weather-selector-wrap custom-dropdown" id="weather-dropdown-container">
+                    <button class="dropdown-trigger" id="weather-dropdown-trigger" aria-haspopup="listbox"
+                        aria-expanded="false">
+                        <i data-lucide="refresh-cw" class="current-weather-icon"></i>
+                        <span class="current-weather-text">Auto Weather</span>
+                        <i data-lucide="chevron-down" class="chevron-icon"></i>
+                    </button>
+                    <ul class="dropdown-menu" id="weather-dropdown-menu" role="listbox">
+                        <li class="dropdown-item" data-value="auto" role="option">
+                            <i data-lucide="refresh-cw"></i> Auto Weather
+                        </li>
+                        <li class="dropdown-item" data-value="sunny" role="option">
+                            <i data-lucide="sun"></i> Sunny
+                        </li>
+                        <li class="dropdown-item" data-value="rainy" role="option">
+                            <i data-lucide="umbrella"></i> Rainy
+                        </li>
+                        <li class="dropdown-item" data-value="winter" role="option">
+                            <i data-lucide="snowflake"></i> Winter
+                        </li>
+                        <li class="dropdown-item" data-value="cloudy" role="option">
+                            <i data-lucide="cloud"></i> Cloudy
+                        </li>
+                    </ul>
+                </div>
+                <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+                    <i data-lucide="sun" class="sun-icon"></i>
+                    <i data-lucide="moon" class="moon-icon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1 class="hero-title animate-reveal">Ask Your Codebase, <span class="text-gradient">Get Exact
+                    Answers</span></h1>
+            <p class="hero-subtitle animate-reveal">An advanced codebase search engine that leverages Tree-sitter AST
+                parsing, Chroma Cloud vector embedding search, and Groq LLMs to deliver accurate code answers with exact
+                line citations.</p>
+        </section>
+
+        <!-- Core App Grid (Two Columns: Indexer & QA Engine) -->
+        <div class="app-grid">
+
+            <!-- Indexing Card (Sidebar-like left pane) -->
+            <section class="glass-card indexer-card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <span class="card-icon"><i data-lucide="database"></i></span>
+                        <h2>Repository Indexing</h2>
+                    </div>
+                    <div class="weather-card-badge" id="index-weather-badge"></div>
+                </div>
+                <p class="card-desc">Provide a public GitHub repository URL to clone, parse classes/functions with
+                    Tree-sitter, and build embeddings in Chroma Cloud.</p>
+
+                <form id="index-form" class="app-form">
+                    <div class="input-group">
+                        <label for="repo_url">GitHub Repository URL</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="github" class="input-icon"></i>
+                            <input type="url" id="repo_url" placeholder="https://github.com/octocat/Spoon-Knife"
+                                required autocomplete="off">
+                        </div>
+                    </div>
+                    <button type="submit" id="btn-index" class="btn btn-gold btn-full">
+                        <span class="btn-text">Index Repository</span>
+                        <span class="loader-spinner hidden"><i data-lucide="refresh-cw"></i></span>
+                    </button>
+                </form>
+
+                <!-- Indexing Loader / Skeleton -->
+                <div id="index-loader" class="index-loader hidden">
+                    <div class="skeleton-line skeleton-title"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                    <p class="loader-text">Cloning repository, parsing AST structures, and writing vector indices...</p>
+                </div>
+
+                <!-- Indexing Success Result -->
+                <div id="index-success" class="index-result hidden">
+                    <div class="success-banner">
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Indexing Completed!</span>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-value" id="metric-files">0</span>
+                            <span class="metric-label">Files Loaded</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-value" id="metric-chunks">0</span>
+                            <span class="metric-label">AST Chunks</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Question Answering Card (Main right pane) -->
+            <section class="glass-card qa-card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <span class="card-icon"><i data-lucide="message-square"></i></span>
+                        <h2>Ask the Codebase</h2>
+                    </div>
+                    <div class="weather-card-badge" id="qa-weather-badge"></div>
+                </div>
+                <p class="card-desc">Submit questions about implementation details, module setups, or logic flows. The
+                    system will retrieve relevant AST blocks and answer using only verified code context.</p>
+
+                <form id="ask-form" class="app-form">
+                    <div class="input-group">
+                        <label for="question">Your Question</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="search" class="input-icon"></i>
+                            <input type="text" id="question" placeholder="e.g. How are HTTP adapters handled?" required
+                                autocomplete="off" disabled>
+                        </div>
+                    </div>
+
+                    <div class="advanced-controls-row">
+                        <div class="control-group">
+                            <label for="top_k">Chunks Limit (Top K)</label>
+                            <input type="number" id="top_k" min="1" max="10" value="4">
+                        </div>
+                        <div class="control-group">
+                            <label for="similarity_threshold">Similarity Cutoff</label>
+                            <input type="number" id="similarity_threshold" min="0.0" max="1.0" step="0.05" value="0.30">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-ask" class="btn btn-purple btn-full" disabled>
+                        <span class="btn-text">Generate Answer</span>
+                        <span class="loader-spinner hidden"><i data-lucide="loader"></i></span>
+                    </button>
+                </form>
+
+                <!-- QA Loader / Skeleton -->
+                <div id="qa-loader" class="qa-loader hidden">
+                    <div class="skeleton-line skeleton-title"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <p class="loader-text">Analyzing database vectors and reasoning with Groq LLM...</p>
+                </div>
+
+                <!-- Answer Display Container -->
+                <div id="answer-container" class="answer-container hidden">
+                    <div class="answer-header">
+                        <h3><i data-lucide="sparkles"></i> Codebase Answer</h3>
+                        <button id="btn-copy-answer" class="btn-icon-label" title="Copy answer to clipboard">
+                            <i data-lucide="copy"></i> Copy Answer
+                        </button>
+                    </div>
+                    <div class="markdown-body" id="answer-body">
+                        <!-- Markdown text injected dynamically -->
+                    </div>
+
+                    <!-- Citations Header -->
+                    <div class="citations-header">
+                        <h3><i data-lucide="scroll"></i> Exact Source Citations</h3>
+                    </div>
+                    <div class="citations-list" id="citations-list">
+                        <!-- Citations cards injected dynamically -->
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- How It Works Section -->
+        <section id="features" class="info-section">
+            <h2 class="section-title">RAG Pipeline Architecture</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i data-lucide="git-branch"></i></div>
+                    <h3>1. Clone & Standardize</h3>
+                    <p>Clones or pulls the requested branch, verifies directories, and filters out non-code assets,
+                        ensuring clean context loading.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i data-lucide="code-2"></i></div>
+                    <h3>2. Tree-sitter AST Chunker</h3>
+                    <p>Parses syntax trees using Tree-sitter bindings for Python, JS, and TS, isolating functions,
+                        classes, and methods as semantic blocks.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i data-lucide="shield-check"></i></div>
+                    <h3>3. Citation Embedding</h3>
+                    <p>Embeds items into a high-dimensional vector space using <code>bge-small-en-v1.5</code>, tracking
+                        line numbers and scopes for precise traceback reference.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i data-lucide="zap"></i></div>
+                    <h3>4. Cosine Search & Groq RAG</h3>
+                    <p>Executes fast cosine checks, filters weak embeddings via thresholds, and leverages 70B Groq
+                        inference to generate halluncination-free code answers.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack Section -->
+        <section id="tech-stack" class="info-section">
+            <h2 class="section-title">Project Stack</h2>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <h4>Chroma Cloud</h4>
+                    <p>Vector database cluster indexing multi-dimensional code embeddings.</p>
+                </div>
+                <div class="tech-item">
+                    <h4>Tree-sitter AST</h4>
+                    <p>Contextual concrete syntax tree analyzer for Python, JS, and TS.</p>
+                </div>
+                <div class="tech-item">
+                    <h4>Groq API</h4>
+                    <p>Ultra-low-latency Llama-3 inference engine for rapid code summarization.</p>
+                </div>
+                <div class="tech-item">
+                    <h4>Flask Framework</h4>
+                    <p>Service-layered Python web backend utilizing modular blueprints and JSON contracts.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2026 Codebase QA-RAG Search.</p>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- App JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+
+</html>
