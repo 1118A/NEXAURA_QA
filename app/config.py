@@ -8,17 +8,28 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Directories
-DATA_DIR = BASE_DIR / "data"
-REPOS_DIR = DATA_DIR / "repos"
-LOGS_DIR = BASE_DIR / "logs"
+# Detect serverless environment (Netlify, Vercel, AWS Lambda)
+IS_SERVERLESS = (
+    os.getenv("NETLIFY") == "true"
+    or os.getenv("VERCEL") == "true"
+    or "LAMBDA_TASK_ROOT" in os.environ
+)
 
-# Ensure directories exist (gracefully skip on read-only filesystems like Vercel)
+if IS_SERVERLESS:
+    DATA_DIR = Path("/tmp/data")
+    LOGS_DIR = Path("/tmp/logs")
+else:
+    DATA_DIR = BASE_DIR / "data"
+    LOGS_DIR = BASE_DIR / "logs"
+
+REPOS_DIR = DATA_DIR / "repos"
+
+# Ensure directories exist
 try:
     REPOS_DIR.mkdir(parents=True, exist_ok=True)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
 except (OSError, PermissionError):
-    pass  # Serverless environment
+    pass  # Serverless environment fallback
 
 # API Keys & Configurations
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")

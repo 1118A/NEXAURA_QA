@@ -41,7 +41,7 @@ class IndexRequest(BaseModel):
 
 
 class AskRequest(BaseModel):
-    question: str = Field(..., min_length=1, description="The query question string.")
+    question: str = Field(..., min_length=1, max_length=500, description="The query question string.")
     top_k: int = Field(4, ge=1, le=10, description="Max matching chunks to return.")
     similarity_threshold: float = Field(
         0.3, ge=0.0, le=1.0, description="Minimum cosine similarity matching score."
@@ -53,4 +53,22 @@ class AskRequest(BaseModel):
         q = v.strip()
         if not q:
             raise ValueError("Question cannot be empty.")
+            
+        # Guardrails: Heuristic check for common prompt injection/jailbreak patterns
+        injection_keywords = [
+            "ignore previous instructions",
+            "ignore the rules",
+            "system override",
+            "you must now act as",
+            "reveal your system prompt",
+            "dan mode",
+            "jailbreak",
+            "ignore above instructions"
+        ]
+        q_lower = q.lower()
+        for keyword in injection_keywords:
+            if keyword in q_lower:
+                raise ValueError("Security Violation: Malicious prompt injection pattern detected.")
+                
         return q
+
